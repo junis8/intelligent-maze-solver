@@ -27,7 +27,7 @@ mvn install
 
 3. Adım: Uygulamayı Çalıştırma
 Projeyi çalıştırmak için Java IDE'nizde projeyi açın veya terminalde şu komutla çalıştırın:
-java main.MazeSolverGui
+java MazeSolverGui
 
 #Kullanım
 Labirent Yükle: Labirenti JPG, PNG veya TXT dosya formatından yükleyebilirsiniz.
