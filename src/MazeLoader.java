@@ -1,52 +1,10 @@
-import java.awt.image.BufferedImage;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.imageio.ImageIO;
-
-public class MazeLoader {
-    
-    /**
-     * Resimden labirenti okuyup 2D grid'e çeviren fonksiyon.
-     * @param filePath Görüntü dosyasının yolu (JPG, PNG)
-     * @return Labirenti temsil eden 2D int dizisi (1 = duvar, 0 = yol)
-     */
-    public static int[][] loadMazeFromImage(String filePath) {
-        try {
-            // Resmi yükle
-            BufferedImage img = ImageIO.read(new File(filePath));
-            int width = img.getWidth();
-            int height = img.getHeight();
-
-            int[][] mazeGrid = new int[height][width];
-
-            for (int y = 0; y < height; y++) {
-                for (int x = 0; x < width; x++) {
-                    int pixel = img.getRGB(x, y);
-                    
-                    // RGB'den gri tona çevirme
-                    int red = (pixel >> 16) & 0xff;
-                    int green = (pixel >> 8) & 0xff;
-                    int blue = pixel & 0xff;
-                    int gray = (red + green + blue) / 3;
-
-                    // Siyah (duvar) ise 1, beyaz (yol) ise 0 ata
-                    mazeGrid[y][x] = (gray < 128) ? 1 : 0;
-                }
-            }
-            return mazeGrid;
-        } catch (Exception e) {
-            System.err.println("Labirent resmi okunamadı: " + e.getMessage());
-            return null;
-        }
-    }
-
-    /**
-     * Metin dosyasından labirenti okuyup 2D grid'e çeviren fonksiyon.
-     * @param filePath Metin dosyasının yolu (.txt)
-     * @return Labirenti temsil eden 2D int dizisi (1 = duvar, 0 = yol)
-     */
+public class MazeLoader {   
+   
     public static int[][] loadMazeFromText(String filePath) {
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
             List<String> lines = new ArrayList<>();

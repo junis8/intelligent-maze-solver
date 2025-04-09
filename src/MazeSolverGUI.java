@@ -4,10 +4,11 @@ import java.io.File;
 import java.util.List;
 
 public class MazeSolverGUI extends JFrame {
+    private JLabel timeLabel;    // Çözüm süresini gösterecek etiket
     private int[][] maze;
     private List<int[]> solutionPath;
-    private int cellSize = 30; // Hücre boyutu
-    private int[] start, end;  // Başlangıç ve Bitiş noktaları
+    private int cellSize = 30;   // Hücre boyutu
+    private int[] start, end;    // Başlangıç ve Bitiş noktaları
 
     public MazeSolverGUI() {
         setTitle("Labirent Çözücü");
@@ -24,8 +25,9 @@ public class MazeSolverGUI extends JFrame {
         JButton loadButton = new JButton("Labirent Yükle");
         JButton bfsButton = new JButton("BFS ile Çöz");
         JButton dfsButton = new JButton("DFS ile Çöz");
-        JButton aStarButton = new JButton("Greedy Best First Search ile Çöz");
-        
+        JButton gbfsButton = new JButton("Greedy Best First Search ile Çöz");
+        JButton iddfsButton = new JButton("Iterative Deepening DFS ile Çöz");
+
         // Labirent yükleme butonu
         loadButton.addActionListener(e -> {
             JFileChooser fileChooser = new JFileChooser();
@@ -34,12 +36,10 @@ public class MazeSolverGUI extends JFrame {
                 File selectedFile = fileChooser.getSelectedFile();
                 String filePath = selectedFile.getAbsolutePath();
 
-                if (filePath.endsWith(".jpg") || filePath.endsWith(".png")) {
-                    maze = MazeLoader.loadMazeFromImage(filePath);
-                } else if (filePath.endsWith(".txt")) {
+                if (filePath.endsWith(".txt")) {
                     maze = MazeLoader.loadMazeFromText(filePath);
                 } else {
-                    JOptionPane.showMessageDialog(this, "Geçersiz dosya formatı! Sadece JPG, PNG veya TXT yükleyin.");
+                    JOptionPane.showMessageDialog(this, "Geçersiz dosya formatı! Sadece TXT yükleyin.");
                     return;
                 }
 
@@ -64,13 +64,22 @@ public class MazeSolverGUI extends JFrame {
 
         bfsButton.addActionListener(e -> solveMaze("BFS", mazePanel));
         dfsButton.addActionListener(e -> solveMaze("DFS", mazePanel));
-        aStarButton.addActionListener(e -> solveMaze("A*", mazePanel));
+        gbfsButton.addActionListener(e -> solveMaze("Greedy Best First Search", mazePanel));
+        iddfsButton.addActionListener(e -> solveMaze("Iterative Deepening DFS", mazePanel));
 
         controlPanel.add(loadButton);
         controlPanel.add(bfsButton);
         controlPanel.add(dfsButton);
-        controlPanel.add(aStarButton);
+        controlPanel.add(gbfsButton);
+        controlPanel.add(iddfsButton);
         add(controlPanel, BorderLayout.SOUTH);
+
+        // Bilgi paneli: Çözüm süresini gösterecek alan
+        JPanel infoPanel = new JPanel();
+        infoPanel.setPreferredSize(new Dimension(200, 600));
+        timeLabel = new JLabel("Çözüm Süresi: -");
+        infoPanel.add(timeLabel);
+        add(infoPanel, BorderLayout.EAST);
 
         setVisible(true);
     }
@@ -85,6 +94,9 @@ public class MazeSolverGUI extends JFrame {
         System.out.println("Başlangıç Noktası: " + start[0] + "," + start[1]);
         System.out.println("Bitiş Noktası: " + end[0] + "," + end[1]);
 
+        // Çözüm süresini ölçmek için zaman damgası al
+        long startTime = System.currentTimeMillis();
+
         switch (algorithm) {
             case "BFS":
                 solutionPath = PathFinder.bfs(maze, start, end);
@@ -95,36 +107,45 @@ public class MazeSolverGUI extends JFrame {
             case "Greedy Best First Search":
                 solutionPath = PathFinder.greedyBestFirstSearch(maze, start, end);
                 break;
+            case "Iterative Deepening DFS":
+                solutionPath = PathFinder.iterativeDeepFirstSearch(maze, start, end);
+                break;
         }
+
+        long endTime = System.currentTimeMillis();
+        long duration = endTime - startTime; // süre milisaniye cinsinden hesaplanır
+
+        // Çözüm süresi bilgisi bilgi panelinde güncelleniyor
+        timeLabel.setText("Çözüm Süresi: " + duration + " ms");
 
         if (solutionPath == null) {
             System.out.println("Çözüm Bulunamadı!");
             JOptionPane.showMessageDialog(this, "Çözüm bulunamadı!");
         } else {
             System.out.println("Çözüm Bulundu! Yol uzunluğu: " + solutionPath.size());
+            PathFinder.printSolvedMaze(maze, solutionPath);
         }
 
         mazePanel.repaint();
     }
-
-
 
     // Labirenti çizen panel
     class MazePanel extends JPanel {
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
-            if (maze == null) return;
+            if (maze == null)
+                return;
 
             for (int i = 0; i < maze.length; i++) {
                 for (int j = 0; j < maze[0].length; j++) {
                     if (maze[i][j] == 1) {
                         g.setColor(Color.BLACK); // Duvar
-                    }else if(maze[i][j] == 2){
-                    	g.setColor(Color.RED); // Baslangic
-                    }else if(maze[i][j] == 3){
-                    	g.setColor(Color.GREEN); // Bitis
-                    }else {
+                    } else if (maze[i][j] == 2) {
+                        g.setColor(Color.RED);   // Başlangıç
+                    } else if (maze[i][j] == 3) {
+                        g.setColor(Color.GREEN); // Bitiş
+                    } else {
                         g.setColor(Color.WHITE); // Yol
                     }
                     g.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
